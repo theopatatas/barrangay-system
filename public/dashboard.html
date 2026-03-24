@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barangay Santa Rosa Resident Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --primary: #1b5e20; --primary-dark: #2e7d32; --secondary: rgba(245,245,245,0.85); --card-bg: rgba(255,255,255,0.85); --text: #2c3e50; --accent: #1565c0; --accent-hover: #0d47a1; --error: #c62828; --warning: #ef6c00; --shadow: 0 8px 24px rgba(0,0,0,0.15);}
+.dark { --secondary: rgba(18,18,18,0.85); --card-bg: rgba(30,30,30,0.85); --text: #f1f1f1; --shadow: 0 8px 24px rgba(0,0,0,0.3);}
+* { box-sizing: border-box; margin:0; padding:0; font-family:'Inter',sans-serif; }
+body { min-height: 100vh; color: var(--text); transition: all .4s ease; overflow-x: hidden; background: linear-gradient(135deg, #e0f2f1, #f1f8e9);}
+body::before { content: ""; position: fixed; top:0; left:0; right:0; bottom:0; background: url('e9bc6878-e669-4753-bf3c-83e2d815a768.jpg') no-repeat center center; background-size: cover; filter: blur(10px) brightness(0.65); z-index: -1; }
+
+/* --- HEADER --- */
+.top-bar { width:100%; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; background: var(--primary); color:#fff; box-shadow: var(--shadow); }
+.top-bar .brand { display:flex; align-items:center; gap:12px; font-weight:600; font-size:16px; }
+.top-bar .brand img { width:40px; height:40px; border-radius:50%; }
+.top-bar .top-actions { display:flex; align-items:center; gap:16px; }
+.icon-btn { cursor:pointer; position:relative; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,0.15); }
+.icon-btn:hover { background: rgba(255,255,255,0.25); }
+.username { cursor:pointer; position:relative; display:flex; align-items:center; gap:6px; }
+.username img { width:30px; height:30px; border-radius:50%; }
+.username-dropdown { display:none; position:absolute; top:38px; right:0; background: var(--card-bg); color: var(--text); border-radius:12px; padding:12px; width:220px; box-shadow: var(--shadow); z-index:10; flex-direction:column; gap:8px; }
+.username-dropdown input { width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
+.username-dropdown button { width:100%; padding:8px; border:none; border-radius:8px; background: var(--primary); color:#fff; cursor:pointer; }
+.username:hover .username-dropdown { display:flex; flex-direction:column; }
+
+/* --- CONTAINER --- */
+.container { display:flex; min-height: calc(100vh - 64px); }
+.sidebar { width:200px; background: var(--secondary); display:flex; flex-direction:column; padding:12px; gap:8px; }
+.sidebar button { padding:10px; border:none; border-radius:10px; background:rgba(0,0,0,0.05); cursor:pointer; text-align:left; }
+.sidebar button.active { background: var(--primary); color:#fff; }
+.main { flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
+.section { display:none; }
+.section.active { display:block; }
+.card { background: var(--card-bg); padding:16px; border-radius:14px; box-shadow: var(--shadow); margin-bottom:12px; }
+.grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+
+/* --- INPUTS --- */
+input, select, textarea { width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ccc; margin-top:6px; }
+textarea { resize:none; height:80px; }
+
+/* --- NOTIFICATIONS --- */
+#notifPanel { display:none; position:absolute; right:0; top:36px; background: var(--card-bg); color: var(--text); width:240px; border-radius:12px; box-shadow: var(--shadow); padding:8px; z-index:20; }
+#notifPanelHeader { font-weight:600; font-size:14px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:4px; display:flex; justify-content:space-between; }
+
+/* --- TOAST --- */
+#toast { position:fixed; bottom:24px; right:24px; background:var(--primary); color:#fff; padding:12px 20px; border-radius:12px; box-shadow:var(--shadow); display:none; z-index:100; }
+
+/* --- Receipt Modal --- */
+#receiptModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
+#receiptContent { background:#fff; color:#000; padding:20px; border-radius:14px; max-width:400px; width:90%; }
+#receiptContent button { margin-top:10px; width:100%; padding:10px; border:none; border-radius:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="brand">
+    <img src="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg" alt="Logo">
+    <div>Barangay Santa Rosa Resident Portal</div>
+  </div>
+  <div class="top-actions">
+    <div class="icon-btn bell" id="bellIcon">🔔 <span id="notifCount">0</span>
+      <div id="notifPanel">
+        <div id="notifPanelHeader">Notifications <span style="cursor:pointer;" onclick="closeNotifPanel()">✖</span></div>
+        <ul id="notifList"></ul>
+      </div>
+    </div>
+    <div class="icon-btn" onclick="toggleDark()">🌙</div>
+    <div class="username" id="usernameDisplay">
+      <img src="https://via.placeholder.com/30.png?text=U" id="userAvatar" alt="Avatar">
+      <span id="userNameText">User</span>
+      <div class="username-dropdown" id="profileDropdown">
+        <h4>Profile Settings</h4>
+        <input id="pname" placeholder="Full Name">
+        <input id="pemail" placeholder="Email">
+        <input id="paddress" placeholder="Address">
+        <button onclick="saveProfile()">Save Profile</button>
+        <button onclick="logout()" style="margin-top:10px; background:#c62828;">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="sidebar">
+    <button class="active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
+    <button onclick="showSection('requests',this)">📝 Request Document</button>
+    <button onclick="showSection('complaints',this)">⚠️ Submit Complaint</button>
+    <button onclick="showSection('announcements',this)">📢 Announcements</button>
+  </div>
+
+  <div class="main">
+    <div id="dashboard" class="section active">
+      <div class="grid">
+        <div class="card"><h3>Document Requests</h3><ul id="requestList"></ul></div>
+        <div class="card"><h3>Complaints</h3><ul id="complaintList"></ul></div>
+      </div>
+    </div>
+
+    <div id="requests" class="section">
+      <div class="card" id="requestCard">
+        <h3>Request Barangay Document</h3>
+        <select id="docType">
+          <option value="">Select Document</option>
+          <option>Barangay Clearance</option>
+          <option>Certificate of Residency</option>
+          <option>Certificate of Indigency</option>
+        </select>
+        <label>Pickup Date (Weekdays Only)</label>
+        <input type="date" id="pickupDate" onchange="renderTimeSlots()">
+        <div id="slotContainer"></div>
+        <button class="submit-btn" onclick="submitRequest()">Submit Request</button>
+      </div>
+    </div>
+
+    <div id="complaints" class="section">
+      <div class="card" id="complaintCard">
+        <h3>Submit Complaint</h3>
+        <select id="complaintCategory">
+          <option value="">Select Category</option>
+          <option>Noise Disturbance</option>
+          <option>Neighborhood Issue</option>
+          <option>Sanitation Concern</option>
+          <option>Other</option>
+        </select>
+        <input id="complaintSubject" placeholder="Subject">
+        <textarea id="complaintDesc" placeholder="Enter details"></textarea>
+        <button class="submit-btn" onclick="submitComplaint()">Submit Complaint</button>
+      </div>
+    </div>
+
+    <div id="announcements" class="section">
+      <div class="grid" id="announcementGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="receiptModal">
+  <div id="receiptContent">
+    <h3>Request Receipt</h3>
+    <div id="receiptDetails"></div>
+    <button onclick="downloadReceipt()">Download PDF</button>
+    <button onclick="closeReceipt()" style="background:#c62828;">Close</button>
+  </div>
+</div>
+
+<script>
+// ------------------ Session ------------------
+let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
+if(!currentUser){ window.location="index.html"; }
+
+async function parseJsonResponse(res) {
+  const text = await res.text();
+
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (err) {
+    return { message: "Unexpected server response" };
+  }
+}
+
+async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options);
+  const data = await parseJsonResponse(res);
+
+  if (!res.ok) {
+    const message = data.message || "Request failed";
+
+    if (res.status === 401) {
+      localStorage.removeItem("currentUser");
+      showToast("Your session expired. Please log in again.");
+      setTimeout(() => {
+        window.location = "index.html";
+      }, 800);
+    }
+
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+// ------------------ Helper ------------------
+function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none",3000); }
+function showSection(id, btn){ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); document.querySelectorAll(".sidebar button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); }
+
+// ------------------ Dark Mode ------------------
+function toggleDark(){ document.body.classList.toggle("dark"); }
+
+// ------------------ Profile ------------------
+async function saveProfile(){
+  const fullName=document.getElementById("pname").value;
+  const email=document.getElementById("pemail").value;
+  const address=document.getElementById("paddress").value;
+
+  try {
+    const data = await apiFetch("/api/updateProfile", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({fullName,email,address})
+    });
+
+    showToast(data.message || "Profile updated");
+    currentUser = { ...currentUser, ...data };
+    localStorage.setItem("currentUser",JSON.stringify(currentUser));
+    document.getElementById("userNameText").textContent = currentUser.fullName;
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+// ------------------ Logout ------------------
+function logout(){ fetch("/api/logout",{method:"POST"}).finally(()=>{ localStorage.removeItem("currentUser"); window.location="index.html"; }); }
+
+// ------------------ Document Requests ------------------
+let selectedSlot=null;
+async function renderTimeSlots(){
+  const container=document.getElementById("slotContainer");
+  container.innerHTML="";
+  const date=document.getElementById("pickupDate").value;
+  if(!date) return;
+
+  const selectedDate = new Date(`${date}T00:00:00`);
+  const day = selectedDate.getDay();
+  if (day === 0 || day === 6) {
+    showToast("Please choose a weekday pickup date.");
+    document.getElementById("pickupDate").value = "";
+    selectedSlot = null;
+    return;
+  }
+
+  const slots=["9AM-10AM","10AM-11AM","11AM-12NN","1PM-2PM","2PM-3PM"];
+  for (const s of slots) {
+    let booked = false;
+
+    try {
+      const slot = await apiFetch(`/api/checkSlot?date=${encodeURIComponent(date)}&time=${encodeURIComponent(s)}`);
+      booked = slot.booked;
+    } catch (err) {
+      showToast(err.message);
+      return;
+    }
+
+    const btn=document.createElement("button");
+    btn.textContent=s; btn.style.margin="4px";
+    btn.disabled = booked;
+    btn.style.opacity = booked ? "0.6" : "1";
+    btn.onclick=()=>{
+      if (booked) return;
+      selectedSlot=s;
+      Array.from(container.children).forEach(b=>{b.style.background=""; b.style.color="";});
+      btn.style.background="#43a047";
+      btn.style.color="#fff";
+    };
+    if (booked) {
+      btn.title = "This slot is already booked";
+    }
+    container.appendChild(btn);
+  }
+}
+
+async function submitRequest(){
+  const doc=document.getElementById("docType").value;
+  const date=document.getElementById("pickupDate").value;
+  const time=selectedSlot;
+  if(!doc||!date||!time){ showToast("Select all fields"); return; }
+
+  try {
+    const data = await apiFetch("/api/request", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({doc,date,time})
+    });
+
+    showToast(data.message || "Request submitted");
+    selectedSlot = null;
+    renderRequests();
+    renderTimeSlots();
+    showReceipt(doc,date,time);
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function renderRequests(){
+  try {
+    const data = await apiFetch("/api/me");
+    const list=document.getElementById("requestList"); list.innerHTML="";
+    (data.requests||[]).forEach(r=>{
+      const li=document.createElement("li");
+      li.textContent=`${r.doc} on ${r.date} ${r.time} [${r.status}]`;
+      if(r.status==="Pending"){ li.style.color="#ef6c00"; }
+      else if(r.status==="Approved"){ li.style.color="#43a047"; }
+      else if(r.status==="Denied" || r.status==="Rejected"){ li.style.color="#c62828"; }
+      list.appendChild(li);
+    });
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+// ------------------ Complaints ------------------
+async function submitComplaint(){
+  const cat=document.getElementById("complaintCategory").value;
+  const subj=document.getElementById("complaintSubject").value;
+  const desc=document.getElementById("complaintDesc").value;
+  if(!cat||!subj||!desc){ showToast("Fill all complaint fields"); return; }
+
+  try {
+    const data = await apiFetch("/api/complaint", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({cat,subj,desc})
+    });
+
+    showToast(data.message || "Complaint submitted");
+    renderComplaints();
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function renderComplaints(){
+  try {
+    const data = await apiFetch("/api/me");
+    const list=document.getElementById("complaintList"); list.innerHTML="";
+    (data.complaints||[]).forEach(c=>{
+      const li=document.createElement("li");
+      li.textContent=`${c.cat}: ${c.subj} [${c.status}]`; list.appendChild(li);
+    });
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+// ------------------ Announcements ------------------
+async function renderAnnouncements(){
+  try {
+    const data = await apiFetch("/api/announcements");
+    const grid=document.getElementById("announcementGrid"); grid.innerHTML="";
+    data.forEach(a=>{
+      const div=document.createElement("div"); div.className="card"; div.innerHTML=`<h4>${a.title}</h4><p>${a.desc || a.content}</p>`; grid.appendChild(div);
+    });
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+// ------------------ Notifications ------------------
+async function renderNotifications(){
+  try {
+    const data = await apiFetch("/api/notifications");
+    const panel=document.getElementById("notifList"); panel.innerHTML="";
+    document.getElementById("notifCount").textContent=(data||[]).length;
+    (data||[]).forEach(n=>{
+      const li=document.createElement("li"); li.textContent=`${n.message} (${n.time})`; panel.appendChild(li);
+    });
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+document.getElementById("bellIcon").onclick=()=>{ const p=document.getElementById("notifPanel"); p.style.display=(p.style.display==="block")?"none":"block"; }
+function closeNotifPanel(){ document.getElementById("notifPanel").style.display="none"; }
+
+// ------------------ Receipt ------------------
+function showReceipt(doc,date,time){ const m=document.getElementById("receiptModal"); const d=document.getElementById("receiptDetails"); d.innerHTML=`Document: ${doc}<br>Date: ${date}<br>Time: ${time}`; m.style.display="flex"; }
+function closeReceipt(){ document.getElementById("receiptModal").style.display="none"; }
+function downloadReceipt(){ showToast("PDF Download feature not implemented"); }
+
+// ------------------ Init ------------------
+document.getElementById("userNameText").textContent=currentUser.fullName;
+document.getElementById("pname").value=currentUser.fullName;
+document.getElementById("pemail").value=currentUser.email;
+document.getElementById("paddress").value=currentUser.address;
+
+renderRequests();
+renderComplaints();
+renderAnnouncements();
+renderNotifications();
+
+// Auto-refresh
+setInterval(renderNotifications, 5000);
+setInterval(renderRequests, 5000);
+setInterval(renderComplaints, 5000);
+</script>
+</body>
+</html>
