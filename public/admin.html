@@ -5,21 +5,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
+<link rel="icon" type="image/jpeg" sizes="32x32" href="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg">
+<link rel="apple-touch-icon" href="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'Inter', sans-serif; margin: 20px; background: #f5f5f5; color: #2c3e50; }
+  :root { --primary: #1b5e20; --secondary: rgba(245,245,245,0.85); --card-bg: #fff; --text: #2c3e50; --shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; margin: 0; background: linear-gradient(135deg, #e0f2f1, #f1f8e9); color: var(--text); min-height: 100vh; }
+  body::before { content: ""; position: fixed; inset: 0; background: url('e9bc6878-e669-4753-bf3c-83e2d815a768.jpg') no-repeat center center; background-size: cover; filter: blur(10px) brightness(0.65); z-index: -1; }
   h1 { font-size: 28px; margin-bottom: 20px; }
   h2 { font-size: 22px; margin-top: 40px; margin-bottom: 16px; color: #1565c0; }
+  .top-bar { width:100%; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; background: var(--primary); color:#fff; box-shadow: var(--shadow); }
+  .top-bar .brand { display:flex; align-items:center; gap:12px; font-weight:600; font-size:16px; }
+  .top-nav { display:flex; align-items:center; gap:12px; }
+  .top-nav button { border:none; background:transparent; color:#e8f5e9; padding:8px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+  .top-nav button.active { background: rgba(255,255,255,0.18); color:#fff; }
+  .top-nav button:hover { background: rgba(255,255,255,0.12); }
+  .brand-logo-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255,255,255,0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 6px;
+    flex-shrink: 0;
+  }
+  .brand-logo-wrap img {
+    width: 80%;
+    height: 80%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  .top-actions { display:flex; align-items:center; gap:12px; }
+  .icon-btn { padding:8px 14px; border:none; border-radius:8px; background: rgba(255,255,255,0.15); color:#fff; cursor:pointer; font-weight:500; }
+  .icon-btn:hover { background: rgba(255,255,255,0.25); }
+  .profile-menu { position:relative; }
+  .profile-trigger { display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 10px; border-radius:10px; background: rgba(255,255,255,0.15); }
+  .profile-trigger:hover { background: rgba(255,255,255,0.25); }
+  .profile-avatar { width:34px; height:34px; border-radius:50%; background: rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-weight:700; }
+  .profile-dropdown { position:absolute; top:48px; right:0; width:220px; background: rgba(255,255,255,0.98); border-radius:12px; box-shadow: var(--shadow); padding:10px; display:none; z-index:30; }
+  .profile-dropdown.open { display:block; }
+  .profile-dropdown button { width:100%; border:none; border-radius:10px; padding:10px 12px; cursor:pointer; text-align:left; background:transparent; color: var(--text); font-weight:500; }
+  .profile-dropdown button:hover { background: rgba(27,94,32,0.08); }
+  .profile-label { color:#e8f5e9; font-size:13px; }
+  .page-content { padding: 20px; }
+  .stats-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: rgba(255,255,255,0.88); padding: 18px; border-radius: 14px; box-shadow: var(--shadow); }
+  .stat-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #607d8b; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+  .section-block { margin-top: 20px; }
+  .hidden-section { display:none; }
 
   /* --- Card Container for Requests & Complaints --- */
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .announcements-list { display:flex; flex-direction:column; gap:16px; }
+  .pagination { display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; margin-top:18px; }
+  .pagination button {
+    border:none;
+    border-radius:10px;
+    padding:10px 14px;
+    cursor:pointer;
+    background: rgba(255,255,255,0.94);
+    color: #264653;
+    font-weight:600;
+    margin-top: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .pagination button:hover { background: #e3f2fd; }
+  .pagination button.active { background: #1565c0; color:#fff; box-shadow: var(--shadow); }
+  .pagination button:disabled { opacity:0.45; cursor:not-allowed; }
 
-  .card { background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s; }
+  .card { background: var(--card-bg); padding: 16px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 8px; transition: transform 0.2s; }
   .card:hover { transform: translateY(-4px); }
 
   .card-header { font-weight: 600; font-size: 16px; color: #1565c0; margin-bottom: 8px; }
   .card-row { display: flex; justify-content: space-between; margin: 2px 0; }
   .card-row span { font-weight: 500; }
+  .card-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top: 8px; }
+  .view-btn { background:#1565c0; color:#fff; cursor:pointer; }
+  .view-btn:hover { background:#0d47a1; }
+  .status-label { text-transform: capitalize; }
 
   /* Buttons */
   .card button { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background 0.2s, color 0.2s; margin-top: 6px; }
@@ -32,26 +100,185 @@
   .status-Pending { color: #ef6c00; font-weight: 600; }
   .status-Approved { color: #43a047; font-weight: 600; }
   .status-Rejected { color: #c62828; font-weight: 600; }
+  .status-Denied { color: #c62828; font-weight: 600; }
+  .status-Resolved { color: #43a047; font-weight: 600; }
+  .status-Dismissed { color: #c62828; font-weight: 600; }
+  .modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:40; padding:20px; }
+  .modal-backdrop.open { display:flex; }
+  .modal-card { width:min(420px, 100%); background:#fff; border-radius:16px; box-shadow: var(--shadow); padding:20px; }
+  .modal-card h3 { margin:0 0 14px; color:#1565c0; }
+  .password-field { position:relative; margin:10px 0; }
+  .modal-card input { width:100%; padding:12px 48px 12px 14px; border-radius:14px; border:1px solid #cfd8dc; }
+  .password-toggle {
+    position:absolute;
+    top:50%;
+    right:12px;
+    transform:translateY(-50%);
+    border:none;
+    background:transparent;
+    color:#607d8b;
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    padding:4px;
+    margin:0;
+  }
+  .password-toggle:hover { color:#1b5e20; }
+  .password-toggle:focus-visible { outline:2px solid #1565c0; outline-offset:2px; border-radius:8px; }
+  .password-toggle svg { width:18px; height:18px; display:block; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
+  .modal-actions button { border:none; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:600; }
+  .secondary-btn { background:#eceff1; color:#37474f; }
+  .primary-btn { background:var(--primary); color:#fff; }
 
   @media (max-width: 768px) {
     h1 { font-size: 24px; }
     h2 { font-size: 18px; }
+    .top-bar { padding: 12px 16px; }
+    .top-actions { gap:8px; }
   }
 </style>
 </head>
 <body>
 
-<h1>Admin Dashboard</h1>
+<div class="top-bar">
+  <div class="brand">
+    <div class="brand-logo-wrap">
+      <img src="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg" alt="Logo">
+    </div>
+    <div>Barangay Santa Rosa Admin Portal</div>
+  </div>
+  <div class="top-nav">
+    <button id="documentTab" class="active" onclick="showAdminSection('documents', this)">Document Requests</button>
+    <button id="complaintTab" onclick="showAdminSection('complaints', this)">Complaint Requests</button>
+    <button id="announcementTab" onclick="showAdminSection('announcements', this)">Announcements</button>
+  </div>
+  <div class="top-actions">
+    <div class="profile-menu">
+      <div class="profile-trigger" onclick="toggleProfileMenu()">
+        <div class="profile-avatar" id="adminInitials">A</div>
+        <div>
+          <div id="adminName">Administrator</div>
+          <div class="profile-label">Profile</div>
+        </div>
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <button onclick="openChangePassword()">Change Password</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-<h2>Document Requests</h2>
-<div id="requests-grid" class="grid"></div>
+<div class="page-content">
+<div class="stats-grid" id="statsSection">
+  <div class="stat-card">
+    <div class="stat-label">Pending Documents</div>
+    <div class="stat-value" id="pendingRequestsCount">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending Complaints</div>
+    <div class="stat-value" id="pendingComplaintsCount">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Approved Documents</div>
+    <div class="stat-value" id="approvedRequestsCount">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Rejected Documents</div>
+    <div class="stat-value" id="rejectedRequestsCount">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Resolved Complaints</div>
+    <div class="stat-value" id="approvedComplaintsCount">0</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Dismissed Complaints</div>
+    <div class="stat-value" id="dismissedComplaintsCount">0</div>
+  </div>
+</div>
 
-<h2>Complaints</h2>
-<div id="complaints-grid" class="grid"></div>
+<div class="section-block" id="documentSection">
+  <h2>Document Requests</h2>
+  <div id="requests-grid" class="grid"></div>
+  <div id="requests-pagination" class="pagination"></div>
+</div>
+
+<div class="section-block hidden-section" id="complaintSection">
+  <h2>Complaint Requests</h2>
+  <div id="complaints-grid" class="grid"></div>
+  <div id="complaints-pagination" class="pagination"></div>
+</div>
+
+<div class="section-block hidden-section" id="announcementSection">
+  <h2>Announcements</h2>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">Create Announcement</div>
+    <input id="announcementTitle" placeholder="Announcement title" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cfd8dc; margin-top:8px;">
+    <textarea id="announcementContent" placeholder="Announcement description" style="width:100%; min-height:110px; padding:10px 12px; border-radius:10px; border:1px solid #cfd8dc; margin-top:10px; resize:vertical;"></textarea>
+    <div class="card-actions">
+      <button class="approve" onclick="createAnnouncement()">Publish</button>
+    </div>
+  </div>
+  <div id="announcements-grid" class="announcements-list"></div>
+</div>
+</div>
+
+<div class="modal-backdrop" id="passwordModal">
+  <div class="modal-card">
+    <h3>Change Password</h3>
+    <div class="password-field">
+      <input id="currentPassword" type="password" placeholder="Current Password">
+      <button
+        type="button"
+        class="password-toggle"
+        aria-label="Show current password"
+        onclick="togglePasswordVisibility('currentPassword', this)"
+      ></button>
+    </div>
+    <div class="password-field">
+      <input id="newPassword" type="password" placeholder="New Password">
+      <button
+        type="button"
+        class="password-toggle"
+        aria-label="Show new password"
+        onclick="togglePasswordVisibility('newPassword', this)"
+      ></button>
+    </div>
+    <div class="password-field">
+      <input id="confirmPassword" type="password" placeholder="Confirm New Password">
+      <button
+        type="button"
+        class="password-toggle"
+        aria-label="Show confirm password"
+        onclick="togglePasswordVisibility('confirmPassword', this)"
+      ></button>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" onclick="closeChangePassword()">Cancel</button>
+      <button class="primary-btn" onclick="changePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="complaintModal">
+  <div class="modal-card">
+    <h3>Complaint Description</h3>
+    <div id="modalComplaintDescription" style="line-height:1.6; color:#455a64; white-space:pre-wrap;"></div>
+    <div class="modal-actions">
+      <button class="primary-btn" onclick="closeComplaintModal()">Close</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
 if (!currentUser) window.location = "index.html";
+const ITEMS_PER_PAGE = 8;
+let allRequests = [];
+let allComplaints = [];
+let currentRequestPage = 1;
+let currentComplaintPage = 1;
 
 async function parseJsonResponse(res) {
   const text = await res.text();
@@ -82,7 +309,9 @@ async function apiFetch(url, options = {}) {
 
 async function ensureAdmin() {
   try {
-    await apiFetch("/api/admin/me");
+    const admin = await apiFetch("/api/admin/me");
+    document.getElementById("adminName").textContent = admin.fullName || "Administrator";
+    document.getElementById("adminInitials").textContent = (admin.fullName || "A").trim().charAt(0).toUpperCase();
     return true;
   } catch (err) {
     console.error(err);
@@ -90,27 +319,172 @@ async function ensureAdmin() {
   }
 }
 
+function toggleProfileMenu() {
+  document.getElementById("profileDropdown").classList.toggle("open");
+}
+
+function openChangePassword() {
+  document.getElementById("profileDropdown").classList.remove("open");
+  document.getElementById("passwordModal").classList.add("open");
+}
+
+function closeChangePassword() {
+  document.getElementById("passwordModal").classList.remove("open");
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.querySelectorAll(".password-toggle").forEach((button) => {
+    setPasswordToggleIcon(button, false);
+  });
+  document.querySelectorAll("#passwordModal input").forEach((input) => {
+    input.type = "password";
+  });
+}
+
+function openComplaintModal(complaint) {
+  document.getElementById("modalComplaintDescription").textContent = complaint.desc || "No description provided.";
+  document.getElementById("complaintModal").classList.add("open");
+}
+
+function closeComplaintModal() {
+  document.getElementById("complaintModal").classList.remove("open");
+}
+
+function setPasswordToggleIcon(button, isVisible) {
+  button.innerHTML = isVisible
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+         <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+         <circle cx="12" cy="12" r="3"></circle>
+       </svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+         <path d="M3 3l18 18"></path>
+         <path d="M10.6 10.7a3 3 0 0 0 4.2 4.2"></path>
+         <path d="M9.4 5.1A11.3 11.3 0 0 1 12 5c6.5 0 10 7 10 7a16.9 16.9 0 0 1-4 4.9"></path>
+         <path d="M6.6 6.7C3.8 8.5 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.2-.9"></path>
+       </svg>`;
+}
+
+function togglePasswordVisibility(inputId, button) {
+  const input = document.getElementById(inputId);
+  const isHidden = input.type === "password";
+  input.type = isHidden ? "text" : "password";
+  setPasswordToggleIcon(button, isHidden);
+  const fieldLabel = input.placeholder.toLowerCase();
+  button.setAttribute("aria-label", `${isHidden ? "Hide" : "Show"} ${fieldLabel}`);
+}
+
+async function logout() {
+  try {
+    await fetch("/api/logout", { method: "POST" });
+  } finally {
+    localStorage.removeItem("currentUser");
+    window.location = "index.html";
+  }
+}
+
+async function changePassword() {
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    alert("Please fill out all password fields.");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    alert("New passwords do not match.");
+    return;
+  }
+
+  try {
+    const data = await apiFetch("/api/changePassword", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    alert(data.message || "Password updated successfully");
+    closeChangePassword();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function showAdminSection(section, button) {
+  document.getElementById('documentSection').classList.toggle('hidden-section', section !== 'documents');
+  document.getElementById('complaintSection').classList.toggle('hidden-section', section !== 'complaints');
+  document.getElementById('announcementSection').classList.toggle('hidden-section', section !== 'announcements');
+  document.getElementById('statsSection').classList.toggle('hidden-section', section === 'announcements');
+  document.querySelectorAll('.top-nav button').forEach((navButton) => navButton.classList.remove('active'));
+  if (button) button.classList.add('active');
+}
+
+function paginateItems(items, currentPage) {
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  return items.slice(start, start + ITEMS_PER_PAGE);
+}
+
+function renderPagination(containerId, items, currentPage, onPageChange) {
+  const container = document.getElementById(containerId);
+  const totalPages = Math.max(1, Math.ceil(items.length / ITEMS_PER_PAGE));
+  container.innerHTML = "";
+
+  const previousButton = document.createElement("button");
+  previousButton.textContent = "Previous";
+  previousButton.disabled = currentPage === 1;
+  previousButton.onclick = () => onPageChange(currentPage - 1);
+  container.appendChild(previousButton);
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    const pageButton = document.createElement("button");
+    pageButton.textContent = page;
+    pageButton.classList.toggle("active", page === currentPage);
+    pageButton.onclick = () => onPageChange(page);
+    container.appendChild(pageButton);
+  }
+
+  const nextButton = document.createElement("button");
+  nextButton.textContent = "Next";
+  nextButton.disabled = currentPage === totalPages;
+  nextButton.onclick = () => onPageChange(currentPage + 1);
+  container.appendChild(nextButton);
+}
+
 // Fetch and display document requests
 async function loadRequests() {
-  const requests = await apiFetch('/api/admin/requests');
+  allRequests = await apiFetch('/api/admin/requests');
+  currentRequestPage = 1;
+  renderRequestsPage();
+}
+
+function renderRequestsPage() {
   const container = document.getElementById('requests-grid');
   container.innerHTML = '';
-  requests.forEach(r => {
+  const totalPages = Math.max(1, Math.ceil(allRequests.length / ITEMS_PER_PAGE));
+  if (currentRequestPage > totalPages) currentRequestPage = totalPages;
+  document.getElementById('pendingRequestsCount').textContent = allRequests.filter(r => r.status === 'Pending').length;
+  document.getElementById('approvedRequestsCount').textContent = allRequests.filter(r => r.status === 'Approved').length;
+  document.getElementById('rejectedRequestsCount').textContent = allRequests.filter(r => r.status === 'Rejected').length;
+  paginateItems(allRequests, currentRequestPage).forEach(r => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <div class="card-header">Request #${r.id}</div>
-      <div class="card-row"><span>User ID:</span> ${r.userId}</div>
-      <div class="card-row"><span>Document:</span> ${r.doc}</div>
+      <div class="card-row"><span>Resident:</span> ${r.userName || 'Unknown user'}</div>
+      <div class="card-row"><span>Type:</span> ${r.doc}</div>
       <div class="card-row"><span>Date:</span> ${r.date}</div>
       <div class="card-row"><span>Time:</span> ${r.time}</div>
-      <div class="card-row"><span>Status:</span> <span class="status-${r.status}">${r.status}</span></div>
-      <div class="card-row">
+      <div class="card-row"><span>Status:</span> <span class="status-${r.status} status-label">${r.status}</span></div>
+      <div class="card-actions">
         <button class="approve" onclick="updateRequest(${r.id}, 'Approved')">Approve</button>
         <button class="reject" onclick="updateRequest(${r.id}, 'Rejected')">Reject</button>
       </div>
     `;
     container.appendChild(card);
+  });
+  renderPagination('requests-pagination', allRequests, currentRequestPage, (page) => {
+    currentRequestPage = page;
+    renderRequestsPage();
   });
 }
 
@@ -126,25 +500,109 @@ async function updateRequest(id, status) {
 
 // Fetch and display complaints
 async function loadComplaints() {
-  const complaints = await apiFetch('/api/admin/complaints');
+  allComplaints = await apiFetch('/api/admin/complaints');
+  currentComplaintPage = 1;
+  renderComplaintsPage();
+}
+
+async function loadAnnouncements() {
+  const announcements = await apiFetch('/api/announcements');
+  const container = document.getElementById('announcements-grid');
+  container.innerHTML = '';
+
+  if (!announcements.length) {
+    const empty = document.createElement('div');
+    empty.className = 'card';
+    empty.innerHTML = '<div class="card-header">No announcements yet</div><div style="line-height:1.6; color:#607d8b;">Create your first announcement to publish updates for residents.</div>';
+    container.appendChild(empty);
+    return;
+  }
+
+  announcements.forEach((announcement) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">${announcement.title}</div>
+      <div style="font-weight:600; color:#607d8b; margin-bottom:6px;">Description</div>
+      <div style="line-height:1.7; color:#455a64;">${announcement.content || ''}</div>
+      <div class="card-actions">
+        <button class="reject" onclick="deleteAnnouncement(${announcement.id})">Delete</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function createAnnouncement() {
+  const title = document.getElementById('announcementTitle').value.trim();
+  const description = document.getElementById('announcementContent').value.trim();
+
+  if (!title || !description) {
+    alert('Please enter both a title and description.');
+    return;
+  }
+
+  try {
+    const result = await apiFetch('/api/admin/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description })
+    });
+
+    document.getElementById('announcementTitle').value = '';
+    document.getElementById('announcementContent').value = '';
+    await loadAnnouncements();
+    alert(result.message || 'Announcement published');
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteAnnouncement(id) {
+  try {
+    const result = await apiFetch('/api/admin/delete-announcement', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+
+    await loadAnnouncements();
+    alert(result.message || 'Announcement deleted');
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function renderComplaintsPage() {
   const container = document.getElementById('complaints-grid');
   container.innerHTML = '';
-  complaints.forEach(c => {
+  const totalPages = Math.max(1, Math.ceil(allComplaints.length / ITEMS_PER_PAGE));
+  if (currentComplaintPage > totalPages) currentComplaintPage = totalPages;
+  document.getElementById('pendingComplaintsCount').textContent = allComplaints.filter(c => c.status === 'Pending').length;
+  document.getElementById('approvedComplaintsCount').textContent = allComplaints.filter(c => c.status === 'Resolved').length;
+  document.getElementById('dismissedComplaintsCount').textContent = allComplaints.filter(c => c.status === 'Dismissed').length;
+  paginateItems(allComplaints, currentComplaintPage).forEach(c => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <div class="card-header">Complaint #${c.id}</div>
-      <div class="card-row"><span>User ID:</span> ${c.userId}</div>
+      <div class="card-row"><span>Resident:</span> ${c.userName || 'Unknown user'}</div>
       <div class="card-row"><span>Category:</span> ${c.cat}</div>
+      <div class="card-row"><span>Date:</span> ${c.created_at || 'Not available'}</div>
       <div class="card-row"><span>Subject:</span> ${c.subj}</div>
-      <div class="card-row"><span>Description:</span> ${c.desc}</div>
-      <div class="card-row"><span>Status:</span> <span class="status-${c.status}">${c.status}</span></div>
-      <div class="card-row">
-        <button class="approve" onclick="updateComplaint(${c.id}, 'Approved')">Approve</button>
-        <button class="reject" onclick="updateComplaint(${c.id}, 'Rejected')">Reject</button>
+      <div class="card-row"><span>Status:</span> <span class="status-${c.status} status-label">${c.status}</span></div>
+      <div class="card-actions">
+        <button class="view-btn">View</button>
+        <button class="approve" onclick="updateComplaint(${c.id}, 'Resolved')">Resolve</button>
+        <button class="reject" onclick="updateComplaint(${c.id}, 'Dismissed')">Dismiss</button>
       </div>
     `;
+    card.querySelector(".view-btn").addEventListener("click", () => openComplaintModal(c));
     container.appendChild(card);
+  });
+  renderPagination('complaints-pagination', allComplaints, currentComplaintPage, (page) => {
+    currentComplaintPage = page;
+    renderComplaintsPage();
   });
 }
 
@@ -163,6 +621,29 @@ ensureAdmin().then((isAdmin) => {
   if (!isAdmin) return;
   loadRequests();
   loadComplaints();
+  loadAnnouncements();
+});
+
+document.querySelectorAll(".password-toggle").forEach((button) => {
+  setPasswordToggleIcon(button, false);
+});
+
+document.addEventListener("click", (event) => {
+  const menu = document.querySelector(".profile-menu");
+  const dropdown = document.getElementById("profileDropdown");
+  const modal = document.getElementById("passwordModal");
+
+  if (menu && !menu.contains(event.target)) {
+    dropdown.classList.remove("open");
+  }
+
+  if (event.target === modal) {
+    closeChangePassword();
+  }
+
+  if (event.target === document.getElementById("complaintModal")) {
+    closeComplaintModal();
+  }
 });
 </script>
 

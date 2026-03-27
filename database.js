@@ -119,7 +119,8 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     userId INTEGER,
     message TEXT,
-    time TEXT
+    time TEXT,
+    isRead INTEGER DEFAULT 0
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS announcements(
@@ -129,5 +130,12 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 });
+
+const notificationColumns = sqlite.prepare("PRAGMA table_info(notifications)").all();
+const hasIsReadColumn = notificationColumns.some((column) => column.name === "isRead");
+
+if (!hasIsReadColumn) {
+  sqlite.exec("ALTER TABLE notifications ADD COLUMN isRead INTEGER DEFAULT 0");
+}
 
 module.exports = db;

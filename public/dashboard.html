@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barangay Santa Rosa Resident Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root { --primary: #1b5e20; --primary-dark: #2e7d32; --secondary: rgba(245,245,245,0.85); --card-bg: rgba(255,255,255,0.85); --text: #2c3e50; --accent: #1565c0; --accent-hover: #0d47a1; --error: #c62828; --warning: #ef6c00; --shadow: 0 8px 24px rgba(0,0,0,0.15);}
-.dark { --secondary: rgba(18,18,18,0.85); --card-bg: rgba(30,30,30,0.85); --text: #f1f1f1; --shadow: 0 8px 24px rgba(0,0,0,0.3);}
 * { box-sizing: border-box; margin:0; padding:0; font-family:'Inter',sans-serif; }
 body { min-height: 100vh; color: var(--text); transition: all .4s ease; overflow-x: hidden; background: linear-gradient(135deg, #e0f2f1, #f1f8e9);}
 body::before { content: ""; position: fixed; top:0; left:0; right:0; bottom:0; background: url('e9bc6878-e669-4753-bf3c-83e2d815a768.jpg') no-repeat center center; background-size: cover; filter: blur(10px) brightness(0.65); z-index: -1; }
@@ -15,35 +15,132 @@ body::before { content: ""; position: fixed; top:0; left:0; right:0; bottom:0; b
 /* --- HEADER --- */
 .top-bar { width:100%; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; background: var(--primary); color:#fff; box-shadow: var(--shadow); }
 .top-bar .brand { display:flex; align-items:center; gap:12px; font-weight:600; font-size:16px; }
-.top-bar .brand img { width:40px; height:40px; border-radius:50%; }
+.brand-logo-wrap { width:56px; height:56px; border-radius:50%; overflow:hidden; background: rgba(255,255,255,0.25); display:flex; justify-content:center; align-items:center; padding:6px; flex-shrink:0; }
+.brand-logo-wrap img { width:80%; height:80%; object-fit:cover; border-radius:50%; }
+.top-nav { display:flex; align-items:center; gap:12px; }
+.top-nav button { border:none; background:transparent; color:#e8f5e9; padding:8px 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+.top-nav button.active { background: rgba(255,255,255,0.18); color:#fff; }
+.top-nav button:hover { background: rgba(255,255,255,0.12); }
 .top-bar .top-actions { display:flex; align-items:center; gap:16px; }
 .icon-btn { cursor:pointer; position:relative; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,0.15); }
 .icon-btn:hover { background: rgba(255,255,255,0.25); }
-.username { cursor:pointer; position:relative; display:flex; align-items:center; gap:6px; }
-.username img { width:30px; height:30px; border-radius:50%; }
-.username-dropdown { display:none; position:absolute; top:38px; right:0; background: var(--card-bg); color: var(--text); border-radius:12px; padding:12px; width:220px; box-shadow: var(--shadow); z-index:10; flex-direction:column; gap:8px; }
-.username-dropdown input { width:100%; padding:6px 8px; border-radius:6px; border:1px solid #ccc; }
-.username-dropdown button { width:100%; padding:8px; border:none; border-radius:8px; background: var(--primary); color:#fff; cursor:pointer; }
-.username:hover .username-dropdown { display:flex; flex-direction:column; }
+.profile-menu { position:relative; }
+.profile-trigger { display:flex; align-items:center; gap:10px; cursor:pointer; padding:6px 10px; border-radius:10px; background: rgba(255,255,255,0.15); }
+.profile-trigger:hover { background: rgba(255,255,255,0.25); }
+.profile-avatar { width:34px; height:34px; border-radius:50%; background: rgba(255,255,255,0.22); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; }
+.profile-meta { display:flex; flex-direction:column; line-height:1.2; }
+.profile-name { color:#fff; font-weight:600; }
+.profile-label { color:#e8f5e9; font-size:13px; }
+.profile-dropdown { position:absolute; top:48px; right:0; width:260px; background: rgba(255,255,255,0.98); color: var(--text); border-radius:12px; box-shadow: var(--shadow); padding:12px; z-index:20; display:none; }
+.profile-dropdown.open { display:block; }
+.profile-dropdown h4 { margin-bottom:10px; font-size:15px; color:#1565c0; }
+.profile-dropdown input { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cfd8dc; margin-top:8px; }
+.profile-dropdown button { width:100%; padding:10px 12px; border:none; border-radius:10px; background: var(--primary); color:#fff; cursor:pointer; font-weight:600; margin-top:10px; }
+.profile-dropdown button:hover { background: var(--primary-dark); }
+.profile-dropdown input:disabled { background:#eceff1; color:#607d8b; cursor:not-allowed; }
 
 /* --- CONTAINER --- */
-.container { display:flex; min-height: calc(100vh - 64px); }
-.sidebar { width:200px; background: var(--secondary); display:flex; flex-direction:column; padding:12px; gap:8px; }
-.sidebar button { padding:10px; border:none; border-radius:10px; background:rgba(0,0,0,0.05); cursor:pointer; text-align:left; }
-.sidebar button.active { background: var(--primary); color:#fff; }
-.main { flex:1; padding:16px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; }
+.container { min-height: calc(100vh - 64px); }
+.main { padding:16px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; max-width: 1180px; width: 100%; margin: 0 auto; }
 .section { display:none; }
 .section.active { display:block; }
 .card { background: var(--card-bg); padding:16px; border-radius:14px; box-shadow: var(--shadow); margin-bottom:12px; }
 .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:16px; }
+.card h3 { margin-bottom: 12px; line-height: 1.35; }
+.card h4 { line-height: 1.35; margin-bottom: 8px; }
+.card p, .card li, .card label { line-height: 1.6; }
+.card ul { padding-left: 18px; }
+.card li + li { margin-top: 8px; }
+.announcements-list { display:flex; flex-direction:column; gap:16px; }
+.announcement-card.highlighted {
+  border: 2px solid #2e7d32;
+  box-shadow: 0 14px 28px rgba(27,94,32,0.22);
+}
+.action-card { display:flex; flex-direction:column; height:100%; }
+.action-card h3 { margin-bottom: 8px; color: var(--primary); }
+.action-card p { margin-bottom: 14px; min-height: 48px; }
+.action-card label { display:block; margin-top: 10px; font-weight: 600; color: #355e3b; }
+.submit-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #1b5e20;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.submit-btn:hover {
+  background: #2e7d32;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(27,94,32,0.22);
+}
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.time-slot-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+.time-slot {
+  width: auto;
+  margin-top: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(27,94,32,0.18);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.92);
+  color: #1b5e20;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.time-slot:hover {
+  background: rgba(46,125,50,0.14);
+  transform: translateY(-1px);
+}
+.time-slot.selected {
+  background: #2e7d32;
+  color: #fff;
+  border-color: #2e7d32;
+  box-shadow: 0 10px 22px rgba(27,94,32,0.22);
+}
+.time-slot:disabled {
+  background: rgba(236,239,241,0.88);
+  color: #90a4ae;
+  border-color: rgba(144,164,174,0.25);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
 /* --- INPUTS --- */
 input, select, textarea { width:100%; padding:8px 10px; border-radius:8px; border:1px solid #ccc; margin-top:6px; }
 textarea { resize:none; height:80px; }
 
 /* --- NOTIFICATIONS --- */
-#notifPanel { display:none; position:absolute; right:0; top:36px; background: var(--card-bg); color: var(--text); width:240px; border-radius:12px; box-shadow: var(--shadow); padding:8px; z-index:20; }
-#notifPanelHeader { font-weight:600; font-size:14px; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:4px; display:flex; justify-content:space-between; }
+#notifPanel { display:none; position:absolute; right:0; top:44px; background: rgba(255,255,255,0.98); color: var(--text); width:320px; border-radius:16px; box-shadow: var(--shadow); padding:12px; z-index:20; }
+#notifPanelHeader { font-weight:600; font-size:15px; border-bottom:1px solid #d7e0e4; padding-bottom:10px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+#notifPanelHeader .notif-title { color:#1565c0; font-weight:700; }
+#notifPanelHeader .notif-actions { display:flex; align-items:center; gap:8px; }
+#notifPanelHeader button { border:none; background:transparent; color:#1565c0; cursor:pointer; font-weight:600; padding:4px 6px; }
+#notifPanelHeader button:hover { color:#0d47a1; }
+#notifList { list-style:none; display:flex; flex-direction:column; gap:10px; max-height:320px; overflow-y:auto; padding:0; margin:0; }
+.notif-item { background:#f8fbfb; border:1px solid #e2ebee; border-radius:12px; padding:12px; }
+.notif-item.clickable { cursor:pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.notif-item.clickable:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(21,101,192,0.14); border-color:#90caf9; }
+.notif-message { font-size:14px; line-height:1.5; color:#2c3e50; margin-bottom:6px; }
+.notif-time { font-size:12px; color:#607d8b; }
+.notif-empty { text-align:center; color:#607d8b; padding:18px 12px; line-height:1.5; }
 
 /* --- TOAST --- */
 #toast { position:fixed; bottom:24px; right:24px; background:var(--primary); color:#fff; padding:12px 20px; border-radius:12px; box-shadow:var(--shadow); display:none; z-index:100; }
@@ -52,32 +149,74 @@ textarea { resize:none; height:80px; }
 #receiptModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
 #receiptContent { background:#fff; color:#000; padding:20px; border-radius:14px; max-width:400px; width:90%; }
 #receiptContent button { margin-top:10px; width:100%; padding:10px; border:none; border-radius:8px; cursor:pointer; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:110; padding:20px; }
+.modal-backdrop.open { display:flex; }
+.modal-card { background:#fff; color:#000; padding:20px; border-radius:14px; max-width:420px; width:100%; box-shadow: var(--shadow); }
+.modal-card h3 { margin-bottom:12px; color:#1565c0; }
+.password-field { position:relative; margin:10px 0; }
+.password-field input { padding-right:46px; }
+.password-toggle {
+  position:absolute;
+  top:50%;
+  right:12px;
+  transform:translateY(-50%);
+  border:none;
+  background:transparent;
+  color:#607d8b;
+  cursor:pointer;
+  padding:4px;
+  margin:0;
+}
+.password-toggle:hover { color:#1b5e20; }
+.password-toggle:focus-visible { outline:2px solid #1565c0; outline-offset:2px; border-radius:8px; }
+.password-toggle svg { width:18px; height:18px; display:block; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
+.modal-actions button { width:auto; margin-top:0; padding:10px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:600; }
+.secondary-btn { background:#eceff1; color:#37474f; }
+.primary-btn { background:var(--primary); color:#fff; }
 </style>
 </head>
 <body>
 
 <div class="top-bar">
   <div class="brand">
-    <img src="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg" alt="Logo">
+    <div class="brand-logo-wrap">
+      <img src="e9bc6878-e669-4753-bf3c-83e2d815a768.jpg" alt="Logo">
+    </div>
     <div>Barangay Santa Rosa Resident Portal</div>
+  </div>
+  <div class="top-nav">
+    <button id="dashboardNav" class="active" onclick="showSection('dashboard',this)">Dashboard</button>
+    <button id="announcementsNav" onclick="showSection('announcements',this)">Announcements</button>
   </div>
   <div class="top-actions">
     <div class="icon-btn bell" id="bellIcon">🔔 <span id="notifCount">0</span>
       <div id="notifPanel">
-        <div id="notifPanelHeader">Notifications <span style="cursor:pointer;" onclick="closeNotifPanel()">✖</span></div>
+        <div id="notifPanelHeader">
+          <span class="notif-title">Notifications</span>
+          <div class="notif-actions">
+            <button type="button" onclick="clearNotifications(event)">Clear</button>
+            <button type="button" aria-label="Close notifications" onclick="closeNotifPanel(event)">✖</button>
+          </div>
+        </div>
         <ul id="notifList"></ul>
       </div>
     </div>
-    <div class="icon-btn" onclick="toggleDark()">🌙</div>
-    <div class="username" id="usernameDisplay">
-      <img src="https://via.placeholder.com/30.png?text=U" id="userAvatar" alt="Avatar">
-      <span id="userNameText">User</span>
-      <div class="username-dropdown" id="profileDropdown">
+    <div class="profile-menu" id="usernameDisplay">
+      <div class="profile-trigger" onclick="toggleProfileMenu()">
+        <div class="profile-avatar" id="userAvatar">U</div>
+        <div class="profile-meta">
+          <span class="profile-name" id="userNameText">User</span>
+          <span class="profile-label">Profile</span>
+        </div>
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
         <h4>Profile Settings</h4>
-        <input id="pname" placeholder="Full Name">
+        <input id="pname" placeholder="Full Name" disabled>
         <input id="pemail" placeholder="Email">
         <input id="paddress" placeholder="Address">
         <button onclick="saveProfile()">Save Profile</button>
+        <button onclick="openChangePassword()" style="background:#1565c0;">Change Password</button>
         <button onclick="logout()" style="margin-top:10px; background:#c62828;">Logout</button>
       </div>
     </div>
@@ -85,18 +224,41 @@ textarea { resize:none; height:80px; }
 </div>
 
 <div class="container">
-  <div class="sidebar">
-    <button class="active" onclick="showSection('dashboard',this)">📊 Dashboard</button>
-    <button onclick="showSection('requests',this)">📝 Request Document</button>
-    <button onclick="showSection('complaints',this)">⚠️ Submit Complaint</button>
-    <button onclick="showSection('announcements',this)">📢 Announcements</button>
-  </div>
-
   <div class="main">
     <div id="dashboard" class="section active">
       <div class="grid">
         <div class="card"><h3>Document Requests</h3><ul id="requestList"></ul></div>
         <div class="card"><h3>Complaints</h3><ul id="complaintList"></ul></div>
+      </div>
+      <div class="grid">
+        <div class="card action-card">
+          <h3>Request Document</h3>
+          <p>Submit a new barangay document request and choose your preferred schedule.</p>
+          <select id="dashboardDocType">
+            <option value="">Select Document</option>
+            <option>Barangay Clearance</option>
+            <option>Certificate of Residency</option>
+            <option>Certificate of Indigency</option>
+          </select>
+          <label>Pickup Date (Weekdays Only)</label>
+          <input type="date" id="dashboardPickupDate" onchange="renderTimeSlots('dashboard')">
+          <div id="dashboardSlotContainer"></div>
+          <button class="submit-btn" onclick="submitRequest('dashboard')">Submit Request</button>
+        </div>
+        <div class="card action-card">
+          <h3>Submit Complaint</h3>
+          <p>Report concerns directly from your dashboard and track their latest status.</p>
+          <select id="dashboardComplaintCategory">
+            <option value="">Select Category</option>
+            <option>Noise Disturbance</option>
+            <option>Neighborhood Issue</option>
+            <option>Sanitation Concern</option>
+            <option>Other</option>
+          </select>
+          <input id="dashboardComplaintSubject" placeholder="Subject">
+          <textarea id="dashboardComplaintDesc" placeholder="Enter details"></textarea>
+          <button class="submit-btn" onclick="submitComplaint('dashboard')">Submit Complaint</button>
+        </div>
       </div>
     </div>
 
@@ -133,7 +295,7 @@ textarea { resize:none; height:80px; }
     </div>
 
     <div id="announcements" class="section">
-      <div class="grid" id="announcementGrid"></div>
+      <div class="announcements-list" id="announcementGrid"></div>
     </div>
   </div>
 </div>
@@ -148,10 +310,35 @@ textarea { resize:none; height:80px; }
   </div>
 </div>
 
+<div class="modal-backdrop" id="passwordModal">
+  <div class="modal-card">
+    <h3>Change Password</h3>
+    <div class="password-field">
+      <input id="currentPassword" type="password" placeholder="Current Password">
+      <button type="button" class="password-toggle" aria-label="Show current password" onclick="togglePasswordVisibility('currentPassword', this)"></button>
+    </div>
+    <div class="password-field">
+      <input id="newPassword" type="password" placeholder="New Password">
+      <button type="button" class="password-toggle" aria-label="Show new password" onclick="togglePasswordVisibility('newPassword', this)"></button>
+    </div>
+    <div class="password-field">
+      <input id="confirmPassword" type="password" placeholder="Confirm Password">
+      <button type="button" class="password-toggle" aria-label="Show confirm password" onclick="togglePasswordVisibility('confirmPassword', this)"></button>
+    </div>
+    <div class="modal-actions">
+      <button class="secondary-btn" onclick="closeChangePassword()">Cancel</button>
+      <button class="primary-btn" onclick="changePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ------------------ Session ------------------
 let currentUser = JSON.parse(localStorage.getItem("currentUser")) || null;
 if(!currentUser){ window.location="index.html"; }
+let latestReceipt = null;
+let notificationItems = [];
+let highlightLatestAnnouncement = false;
 
 async function parseJsonResponse(res) {
   const text = await res.text();
@@ -186,14 +373,47 @@ async function apiFetch(url, options = {}) {
 
 // ------------------ Helper ------------------
 function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.style.display="block"; setTimeout(()=>t.style.display="none",3000); }
-function showSection(id, btn){ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); document.querySelectorAll(".sidebar button").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); }
+function showSection(id, btn){ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); document.getElementById(id).classList.add("active"); document.querySelectorAll(".top-nav button").forEach(b=>b.classList.remove("active")); if (btn) btn.classList.add("active"); }
+function toggleProfileMenu(){ document.getElementById("profileDropdown").classList.toggle("open"); }
+function openAnnouncementsFromNotification() {
+  highlightLatestAnnouncement = true;
+  closeNotifPanel();
+  showSection('announcements', document.getElementById('announcementsNav'));
+  renderAnnouncements();
+}
+function openChangePassword(){ document.getElementById("profileDropdown").classList.remove("open"); document.getElementById("passwordModal").classList.add("open"); }
+function closeChangePassword(){
+  document.getElementById("passwordModal").classList.remove("open");
+  document.getElementById("currentPassword").value = "";
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  document.querySelectorAll("#passwordModal input").forEach((input) => { input.type = "password"; });
+  document.querySelectorAll("#passwordModal .password-toggle").forEach((button) => setPasswordToggleIcon(button, false));
+}
+function setPasswordToggleIcon(button, isVisible) {
+  button.innerHTML = isVisible
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+         <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"></path>
+         <circle cx="12" cy="12" r="3"></circle>
+       </svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+         <path d="M3 3l18 18"></path>
+         <path d="M10.6 10.7a3 3 0 0 0 4.2 4.2"></path>
+         <path d="M9.4 5.1A11.3 11.3 0 0 1 12 5c6.5 0 10 7 10 7a16.9 16.9 0 0 1-4 4.9"></path>
+         <path d="M6.6 6.7C3.8 8.5 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 4.2-.9"></path>
+       </svg>`;
+}
+function togglePasswordVisibility(inputId, button) {
+  const input = document.getElementById(inputId);
+  const isHidden = input.type === "password";
+  input.type = isHidden ? "text" : "password";
+  setPasswordToggleIcon(button, isHidden);
+  button.setAttribute("aria-label", `${isHidden ? "Hide" : "Show"} ${input.placeholder.toLowerCase()}`);
+}
 
 // ------------------ Dark Mode ------------------
-function toggleDark(){ document.body.classList.toggle("dark"); }
-
 // ------------------ Profile ------------------
 async function saveProfile(){
-  const fullName=document.getElementById("pname").value;
   const email=document.getElementById("pemail").value;
   const address=document.getElementById("paddress").value;
 
@@ -201,7 +421,7 @@ async function saveProfile(){
     const data = await apiFetch("/api/updateProfile", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({fullName,email,address})
+      body:JSON.stringify({fullName: currentUser.fullName, email, address})
     });
 
     showToast(data.message || "Profile updated");
@@ -213,23 +433,63 @@ async function saveProfile(){
   }
 }
 
+async function changePassword() {
+  const currentPassword = document.getElementById("currentPassword").value;
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showToast("Fill out all password fields");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showToast("New passwords do not match");
+    return;
+  }
+
+  try {
+    const data = await apiFetch("/api/changePassword", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    showToast(data.message || "Password updated successfully");
+    closeChangePassword();
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
 // ------------------ Logout ------------------
 function logout(){ fetch("/api/logout",{method:"POST"}).finally(()=>{ localStorage.removeItem("currentUser"); window.location="index.html"; }); }
 
 // ------------------ Document Requests ------------------
-let selectedSlot=null;
-async function renderTimeSlots(){
-  const container=document.getElementById("slotContainer");
+let selectedSlots = { requests: null, dashboard: null };
+async function renderTimeSlots(context = "requests"){
+  const containerId = context === "dashboard" ? "dashboardSlotContainer" : "slotContainer";
+  const dateInputId = context === "dashboard" ? "dashboardPickupDate" : "pickupDate";
+  const container=document.getElementById(containerId);
   container.innerHTML="";
-  const date=document.getElementById("pickupDate").value;
+  const date=document.getElementById(dateInputId).value;
   if(!date) return;
 
   const selectedDate = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (selectedDate < today) {
+    showToast("Please choose today or a future date.");
+    document.getElementById(dateInputId).value = "";
+    selectedSlots[context] = null;
+    return;
+  }
+
   const day = selectedDate.getDay();
   if (day === 0 || day === 6) {
     showToast("Please choose a weekday pickup date.");
-    document.getElementById("pickupDate").value = "";
-    selectedSlot = null;
+    document.getElementById(dateInputId).value = "";
+    selectedSlots[context] = null;
     return;
   }
 
@@ -246,15 +506,14 @@ async function renderTimeSlots(){
     }
 
     const btn=document.createElement("button");
-    btn.textContent=s; btn.style.margin="4px";
+    btn.textContent=s;
+    btn.className = "time-slot";
     btn.disabled = booked;
-    btn.style.opacity = booked ? "0.6" : "1";
     btn.onclick=()=>{
       if (booked) return;
-      selectedSlot=s;
-      Array.from(container.children).forEach(b=>{b.style.background=""; b.style.color="";});
-      btn.style.background="#43a047";
-      btn.style.color="#fff";
+      selectedSlots[context]=s;
+      Array.from(container.children).forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
     };
     if (booked) {
       btn.title = "This slot is already booked";
@@ -263,10 +522,12 @@ async function renderTimeSlots(){
   }
 }
 
-async function submitRequest(){
-  const doc=document.getElementById("docType").value;
-  const date=document.getElementById("pickupDate").value;
-  const time=selectedSlot;
+async function submitRequest(context = "requests"){
+  const docInputId = context === "dashboard" ? "dashboardDocType" : "docType";
+  const dateInputId = context === "dashboard" ? "dashboardPickupDate" : "pickupDate";
+  const doc=document.getElementById(docInputId).value;
+  const date=document.getElementById(dateInputId).value;
+  const time=selectedSlots[context];
   if(!doc||!date||!time){ showToast("Select all fields"); return; }
 
   try {
@@ -277,9 +538,11 @@ async function submitRequest(){
     });
 
     showToast(data.message || "Request submitted");
-    selectedSlot = null;
+    selectedSlots[context] = null;
+    document.getElementById(docInputId).value = "";
+    document.getElementById(dateInputId).value = "";
+    document.getElementById(context === "dashboard" ? "dashboardSlotContainer" : "slotContainer").innerHTML = "";
     renderRequests();
-    renderTimeSlots();
     showReceipt(doc,date,time);
   } catch (err) {
     showToast(err.message);
@@ -290,7 +553,7 @@ async function renderRequests(){
   try {
     const data = await apiFetch("/api/me");
     const list=document.getElementById("requestList"); list.innerHTML="";
-    (data.requests||[]).forEach(r=>{
+    (data.requests||[]).filter(r => r.status === "Pending").forEach(r=>{
       const li=document.createElement("li");
       li.textContent=`${r.doc} on ${r.date} ${r.time} [${r.status}]`;
       if(r.status==="Pending"){ li.style.color="#ef6c00"; }
@@ -304,10 +567,13 @@ async function renderRequests(){
 }
 
 // ------------------ Complaints ------------------
-async function submitComplaint(){
-  const cat=document.getElementById("complaintCategory").value;
-  const subj=document.getElementById("complaintSubject").value;
-  const desc=document.getElementById("complaintDesc").value;
+async function submitComplaint(context = "complaints"){
+  const categoryId = context === "dashboard" ? "dashboardComplaintCategory" : "complaintCategory";
+  const subjectId = context === "dashboard" ? "dashboardComplaintSubject" : "complaintSubject";
+  const descId = context === "dashboard" ? "dashboardComplaintDesc" : "complaintDesc";
+  const cat=document.getElementById(categoryId).value;
+  const subj=document.getElementById(subjectId).value;
+  const desc=document.getElementById(descId).value;
   if(!cat||!subj||!desc){ showToast("Fill all complaint fields"); return; }
 
   try {
@@ -318,6 +584,9 @@ async function submitComplaint(){
     });
 
     showToast(data.message || "Complaint submitted");
+    document.getElementById(categoryId).value = "";
+    document.getElementById(subjectId).value = "";
+    document.getElementById(descId).value = "";
     renderComplaints();
   } catch (err) {
     showToast(err.message);
@@ -328,9 +597,11 @@ async function renderComplaints(){
   try {
     const data = await apiFetch("/api/me");
     const list=document.getElementById("complaintList"); list.innerHTML="";
-    (data.complaints||[]).forEach(c=>{
+    (data.complaints||[]).filter(c => c.status === "Pending").forEach(c=>{
       const li=document.createElement("li");
-      li.textContent=`${c.cat}: ${c.subj} [${c.status}]`; list.appendChild(li);
+      li.textContent=`${c.cat}: ${c.subj} [${c.status}]`;
+      if (c.status === "Pending") li.style.color = "#ef6c00";
+      list.appendChild(li);
     });
   } catch (err) {
     showToast(err.message);
@@ -342,9 +613,13 @@ async function renderAnnouncements(){
   try {
     const data = await apiFetch("/api/announcements");
     const grid=document.getElementById("announcementGrid"); grid.innerHTML="";
-    data.forEach(a=>{
-      const div=document.createElement("div"); div.className="card"; div.innerHTML=`<h4>${a.title}</h4><p>${a.desc || a.content}</p>`; grid.appendChild(div);
+    data.forEach((a, index)=>{
+      const div=document.createElement("div");
+      div.className=`card announcement-card${highlightLatestAnnouncement && index === 0 ? " highlighted" : ""}`;
+      div.innerHTML=`<h4>${a.title}</h4><div style="font-weight:600; color:#607d8b; margin-bottom:6px;">Description</div><p>${a.desc || a.content}</p>`;
+      grid.appendChild(div);
     });
+    highlightLatestAnnouncement = false;
   } catch (err) {
     showToast(err.message);
   }
@@ -353,29 +628,125 @@ async function renderAnnouncements(){
 // ------------------ Notifications ------------------
 async function renderNotifications(){
   try {
-    const data = await apiFetch("/api/notifications");
+    notificationItems = await apiFetch("/api/notifications");
     const panel=document.getElementById("notifList"); panel.innerHTML="";
-    document.getElementById("notifCount").textContent=(data||[]).length;
-    (data||[]).forEach(n=>{
-      const li=document.createElement("li"); li.textContent=`${n.message} (${n.time})`; panel.appendChild(li);
+    const unreadCount = notificationItems.filter((item) => !item.isRead).length;
+    document.getElementById("notifCount").textContent=unreadCount;
+    if (!notificationItems.length) {
+      const empty = document.createElement("li");
+      empty.className = "notif-empty";
+      empty.textContent = "No notifications yet";
+      panel.appendChild(empty);
+      return;
+    }
+    notificationItems.forEach(n=>{
+      const li=document.createElement("li");
+      const isAnnouncement = n.message === "New announcement";
+      li.className = `notif-item${isAnnouncement ? " clickable" : ""}`;
+      li.innerHTML = `<div class="notif-message">${n.message}</div><div class="notif-time">${n.time}</div>`;
+      if (isAnnouncement) {
+        li.addEventListener("click", openAnnouncementsFromNotification);
+      }
+      panel.appendChild(li);
     });
   } catch (err) {
     showToast(err.message);
   }
 }
-document.getElementById("bellIcon").onclick=()=>{ const p=document.getElementById("notifPanel"); p.style.display=(p.style.display==="block")?"none":"block"; }
-function closeNotifPanel(){ document.getElementById("notifPanel").style.display="none"; }
+
+async function markNotificationsAsRead() {
+  const unreadCount = notificationItems.filter((item) => !item.isRead).length;
+  if (!unreadCount) return;
+
+  try {
+    await apiFetch("/api/notifications/read", { method: "POST" });
+    notificationItems = notificationItems.map((item) => ({ ...item, isRead: 1 }));
+    document.getElementById("notifCount").textContent = "0";
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function clearNotifications(event) {
+  if (event) event.stopPropagation();
+  try {
+    await apiFetch("/api/notifications/clear", { method: "POST" });
+    notificationItems = [];
+    const list = document.getElementById("notifList");
+    list.innerHTML = "";
+    const empty = document.createElement("li");
+    empty.className = "notif-empty";
+    empty.textContent = "No notifications yet";
+    list.appendChild(empty);
+    document.getElementById("notifCount").textContent = "0";
+    showToast("Notifications cleared");
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+document.getElementById("bellIcon").onclick=()=>{
+  const p=document.getElementById("notifPanel");
+  const isOpen = p.style.display==="block";
+  p.style.display=isOpen?"none":"block";
+  if(!isOpen){
+    markNotificationsAsRead();
+  }
+}
+document.getElementById("notifPanel").onclick = (event) => event.stopPropagation();
+function closeNotifPanel(event){
+  if (event) event.stopPropagation();
+  document.getElementById("notifPanel").style.display="none";
+}
 
 // ------------------ Receipt ------------------
-function showReceipt(doc,date,time){ const m=document.getElementById("receiptModal"); const d=document.getElementById("receiptDetails"); d.innerHTML=`Document: ${doc}<br>Date: ${date}<br>Time: ${time}`; m.style.display="flex"; }
+function showReceipt(doc,date,time){
+  latestReceipt = {
+    residentName: currentUser.fullName,
+    documentType: doc,
+    date,
+    time
+  };
+  const m=document.getElementById("receiptModal");
+  const d=document.getElementById("receiptDetails");
+  d.innerHTML=`Resident Name: ${latestReceipt.residentName}<br>Document: ${doc}<br>Date: ${date}<br>Time: ${time}`;
+  m.style.display="flex";
+}
 function closeReceipt(){ document.getElementById("receiptModal").style.display="none"; }
-function downloadReceipt(){ showToast("PDF Download feature not implemented"); }
+function downloadReceipt(){
+  if (!latestReceipt) {
+    showToast("No receipt data available");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.text("Request Receipt", 20, 25);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`Resident Name: ${latestReceipt.residentName}`, 20, 45);
+  doc.text(`Document Type: ${latestReceipt.documentType}`, 20, 58);
+  doc.text(`Date: ${latestReceipt.date}`, 20, 71);
+  doc.text(`Time: ${latestReceipt.time}`, 20, 84);
+
+  doc.save("request-receipt.pdf");
+}
 
 // ------------------ Init ------------------
 document.getElementById("userNameText").textContent=currentUser.fullName;
+document.getElementById("userAvatar").textContent=(currentUser.fullName || "U").trim().charAt(0).toUpperCase();
 document.getElementById("pname").value=currentUser.fullName;
 document.getElementById("pemail").value=currentUser.email;
 document.getElementById("paddress").value=currentUser.address;
+document.querySelectorAll("#passwordModal .password-toggle").forEach((button) => setPasswordToggleIcon(button, false));
+const minDate = new Date().toISOString().split("T")[0];
+document.getElementById("pickupDate").min = minDate;
+document.getElementById("dashboardPickupDate").min = minDate;
+document.getElementById("slotContainer").classList.add("time-slot-group");
+document.getElementById("dashboardSlotContainer").classList.add("time-slot-group");
 
 renderRequests();
 renderComplaints();
@@ -386,6 +757,16 @@ renderNotifications();
 setInterval(renderNotifications, 5000);
 setInterval(renderRequests, 5000);
 setInterval(renderComplaints, 5000);
+
+document.addEventListener("click", (event) => {
+  const menu = document.getElementById("usernameDisplay");
+  if (menu && !menu.contains(event.target)) {
+    document.getElementById("profileDropdown").classList.remove("open");
+  }
+  if (event.target === document.getElementById("passwordModal")) {
+    closeChangePassword();
+  }
+});
 </script>
 </body>
 </html>

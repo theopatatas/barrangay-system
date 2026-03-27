@@ -136,6 +136,20 @@ app.get("/api/notifications", requireLogin, (req, res) => {
   );
 });
 
+app.post("/api/notifications/clear", requireLogin, (req, res) => {
+  db.run(`DELETE FROM notifications WHERE userId=?`, [req.session.userId], function (err) {
+    if (err) return res.status(500).json({ message: "Failed to clear notifications" });
+    res.json({ message: "Notifications cleared", cleared: this.changes || 0 });
+  });
+});
+
+app.post("/api/notifications/read", requireLogin, (req, res) => {
+  db.run(`UPDATE notifications SET isRead=1 WHERE userId=? AND isRead=0`, [req.session.userId], function (err) {
+    if (err) return res.status(500).json({ message: "Failed to mark notifications as read" });
+    res.json({ message: "Notifications marked as read", updated: this.changes || 0 });
+  });
+});
+
 // LOGOUT
 app.post("/api/logout", (req, res) => {
   req.session.destroy();
@@ -194,6 +208,48 @@ app.get("/api/announcements", (req, res) => {
   });
 });
 
+app.post("/api/admin/announcements", requireAdmin, (req, res) => {
+  const { title, content, description } = req.body;
+  const announcementDescription = description || content;
+  if (!title || !announcementDescription) {
+    return res.status(400).json({ message: "Title and description are required" });
+  }
+
+  db.run(
+    `INSERT INTO announcements(title, content) VALUES(?, ?)`,
+    [title, announcementDescription],
+    function (err) {
+      if (err) return res.status(500).json({ message: "Failed to create announcement" });
+      const announcementId = this.lastID;
+
+      db.run(
+        `INSERT INTO notifications(userId, message, time, isRead)
+         SELECT id, ?, datetime('now'), 0
+         FROM users
+         WHERE role='resident'`,
+        ["New announcement"],
+        function (notificationErr) {
+          if (notificationErr) {
+            return res.status(500).json({ message: "Announcement created but notification delivery failed" });
+          }
+
+          res.json({ message: "Announcement published", id: announcementId });
+        }
+      );
+    }
+  );
+});
+
+app.post("/api/admin/delete-announcement", requireAdmin, (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ message: "Announcement id is required" });
+
+  db.run(`DELETE FROM announcements WHERE id=?`, [id], function (err) {
+    if (err) return res.status(500).json({ message: "Failed to delete announcement" });
+    res.json({ message: "Announcement deleted" });
+  });
+});
+
 // ============ TIME SLOT CHECK ============
 app.get("/api/checkSlot", (req, res) => {
   const { date, time } = req.query;
@@ -237,10 +293,45 @@ app.get("/api/admin/me", requireAdmin, (req, res) => {
   );
 });
 
-app.get("/api/admin/requests", requireAdmin, (req, res) => {
-  db.all(`SELECT * FROM document_requests ORDER BY created_at DESC`, [], (err, rows) => {
-    res.json(rows || []);
+app.post("/api/changePassword", requireLogin, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Current and new password are required" });
+  }
+
+  if (!isStrongPassword(newPassword)) {
+    return res.status(400).json({
+      message:
+        "Password must be at least 8 characters, include uppercase, lowercase, number and special character",
+    });
+  }
+
+  db.get(`SELECT password FROM users WHERE id=?`, [req.session.userId], async (err, user) => {
+    if (err || !user) return res.status(400).json({ message: "User not found" });
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) return res.status(400).json({ message: "Current password is incorrect" });
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    db.run(`UPDATE users SET password=? WHERE id=?`, [hash, req.session.userId], function (updateErr) {
+      if (updateErr) return res.status(500).json({ message: "Password update failed" });
+      res.json({ message: "Password updated successfully" });
+    });
   });
+});
+
+app.get("/api/admin/requests", requireAdmin, (req, res) => {
+  db.all(
+    `SELECT document_requests.*, users.fullName AS userName
+     FROM document_requests
+     LEFT JOIN users ON users.id = document_requests.userId
+     ORDER BY document_requests.created_at DESC`,
+    [],
+    (err, rows) => {
+    res.json(rows || []);
+    }
+  );
 });
 
 // UPDATE REQUEST STATUS & ADD NOTIFICATION
@@ -265,7 +356,14 @@ app.post("/api/admin/update-request", requireAdmin, (req, res) => {
 
 // GET ALL COMPLAINTS
 app.get("/api/admin/complaints", requireAdmin, (req, res) => {
-  db.all(`SELECT * FROM complaints ORDER BY created_at DESC`, [], (err, rows) => res.json(rows || []));
+  db.all(
+    `SELECT complaints.*, users.fullName AS userName
+     FROM complaints
+     LEFT JOIN users ON users.id = complaints.userId
+     ORDER BY complaints.created_at DESC`,
+    [],
+    (err, rows) => res.json(rows || [])
+  );
 });
 
 // UPDATE COMPLAINT STATUS & ADD NOTIFICATION
