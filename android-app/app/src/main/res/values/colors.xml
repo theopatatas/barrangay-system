@@ -1,0 +1,18 @@
+<resources>
+    <color name="primary">#1B5E20</color>
+    <color name="primary_dark">#2E7D32</color>
+    <color name="primary_deep">#124417</color>
+    <color name="primary_soft">#E8F3EA</color>
+    <color name="surface">#F4F8F5</color>
+    <color name="surface_card">#FDFEFD</color>
+    <color name="surface_tint">#F8FBF8</color>
+    <color name="text_primary">#2C3E50</color>
+    <color name="text_secondary">#607D8B</color>
+    <color name="accent">#1565C0</color>
+    <color name="warning">#EF6C00</color>
+    <color name="white">#FFFFFF</color>
+    <color name="overlay_dark">#8A17361A</color>
+    <color name="border_light">#D7E3DA</color>
+    <color name="divider">#E5ECE7</color>
+    <color name="danger">#C62828</color>
+</resources>

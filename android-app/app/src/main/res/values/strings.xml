@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Barangay App</string>
+    <string name="resident_portal">Barangay Santa Rosa Resident Portal</string>
+    <string name="login">Login</string>
+    <string name="create_account">Create Account</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="request_document">Request Document</string>
+    <string name="submit_complaint">Submit Complaint</string>
+    <string name="announcements">Announcements</string>
+    <string name="profile">Profile</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="save_profile">Save Profile</string>
+    <string name="logout">Logout</string>
+    <string name="change_password">Change Password</string>
+    <string name="publish_date">Pickup Date</string>
+    <string name="footer_text">© 2026 Barangay Santa Rosa</string>
+    <string name="dashboard_overview">Overview</string>
+    <string name="dashboard_overview_subtitle">Track your pending requests and active complaints in one place.</string>
+    <string name="dashboard_actions">Resident Actions</string>
+    <string name="dashboard_actions_subtitle">Use the forms below to submit new requests without leaving the dashboard.</string>
+    <string name="pending_requests_title">Pending Document Requests</string>
+    <string name="pending_requests_subtitle">Only active requests are shown here.</string>
+    <string name="pending_complaints_title">Pending Complaints</string>
+    <string name="pending_complaints_subtitle">Resolved or dismissed complaints are hidden from this list.</string>
+    <string name="request_document_subtitle">Submit a new barangay document request and choose your preferred weekday schedule.</string>
+    <string name="submit_complaint_subtitle">Report concerns directly from your dashboard and track their latest status.</string>
+    <string name="available_time_slots">Available Time Slots</string>
+    <string name="notifications_badge_desc">Unread notifications</string>
+</resources>
