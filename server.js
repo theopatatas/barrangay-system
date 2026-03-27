@@ -337,6 +337,12 @@ app.get("/api/admin/requests", requireAdmin, (req, res) => {
 // UPDATE REQUEST STATUS & ADD NOTIFICATION
 app.post("/api/admin/update-request", requireAdmin, (req, res) => {
   const { id, status } = req.body;
+  db.get(`SELECT status FROM document_requests WHERE id=?`, [id], (findErr, request) => {
+    if (findErr || !request) return res.status(404).json({ message: "Request not found" });
+    if (request.status !== "Pending") {
+      return res.status(400).json({ message: "This document request has already been finalized" });
+    }
+
   db.run(
     "UPDATE document_requests SET status=? WHERE id=?",
     [status, id],
@@ -352,6 +358,7 @@ app.post("/api/admin/update-request", requireAdmin, (req, res) => {
       res.json({ message: `Request ${status}` });
     }
   );
+  });
 });
 
 // GET ALL COMPLAINTS
@@ -369,6 +376,12 @@ app.get("/api/admin/complaints", requireAdmin, (req, res) => {
 // UPDATE COMPLAINT STATUS & ADD NOTIFICATION
 app.post("/api/admin/update-complaint", requireAdmin, (req, res) => {
   const { id, status } = req.body;
+  db.get(`SELECT status FROM complaints WHERE id=?`, [id], (findErr, complaint) => {
+    if (findErr || !complaint) return res.status(404).json({ message: "Complaint not found" });
+    if (complaint.status !== "Pending") {
+      return res.status(400).json({ message: "This complaint has already been finalized" });
+    }
+
   db.run(
     "UPDATE complaints SET status=? WHERE id=?",
     [status, id],
@@ -384,6 +397,7 @@ app.post("/api/admin/update-complaint", requireAdmin, (req, res) => {
       res.json({ message: `Complaint ${status}` });
     }
   );
+  });
 });
 
 // LIST ALL USERS

@@ -468,6 +468,12 @@ function renderRequestsPage() {
   paginateItems(allRequests, currentRequestPage).forEach(r => {
     const card = document.createElement('div');
     card.className = 'card';
+    const requestActions = r.status === 'Pending'
+      ? `<div class="card-actions">
+           <button class="approve" onclick="updateRequest(${r.id}, 'Approved')">Approve</button>
+           <button class="reject" onclick="updateRequest(${r.id}, 'Rejected')">Reject</button>
+         </div>`
+      : '';
     card.innerHTML = `
       <div class="card-header">Request #${r.id}</div>
       <div class="card-row"><span>Resident:</span> ${r.userName || 'Unknown user'}</div>
@@ -475,10 +481,7 @@ function renderRequestsPage() {
       <div class="card-row"><span>Date:</span> ${r.date}</div>
       <div class="card-row"><span>Time:</span> ${r.time}</div>
       <div class="card-row"><span>Status:</span> <span class="status-${r.status} status-label">${r.status}</span></div>
-      <div class="card-actions">
-        <button class="approve" onclick="updateRequest(${r.id}, 'Approved')">Approve</button>
-        <button class="reject" onclick="updateRequest(${r.id}, 'Rejected')">Reject</button>
-      </div>
+      ${requestActions}
     `;
     container.appendChild(card);
   });
@@ -584,6 +587,15 @@ function renderComplaintsPage() {
   paginateItems(allComplaints, currentComplaintPage).forEach(c => {
     const card = document.createElement('div');
     card.className = 'card';
+    const complaintActions = c.status === 'Pending'
+      ? `<div class="card-actions">
+           <button class="view-btn">View</button>
+           <button class="approve" onclick="updateComplaint(${c.id}, 'Resolved')">Resolve</button>
+           <button class="reject" onclick="updateComplaint(${c.id}, 'Dismissed')">Dismiss</button>
+         </div>`
+      : `<div class="card-actions">
+           <button class="view-btn">View</button>
+         </div>`;
     card.innerHTML = `
       <div class="card-header">Complaint #${c.id}</div>
       <div class="card-row"><span>Resident:</span> ${c.userName || 'Unknown user'}</div>
@@ -591,11 +603,7 @@ function renderComplaintsPage() {
       <div class="card-row"><span>Date:</span> ${c.created_at || 'Not available'}</div>
       <div class="card-row"><span>Subject:</span> ${c.subj}</div>
       <div class="card-row"><span>Status:</span> <span class="status-${c.status} status-label">${c.status}</span></div>
-      <div class="card-actions">
-        <button class="view-btn">View</button>
-        <button class="approve" onclick="updateComplaint(${c.id}, 'Resolved')">Resolve</button>
-        <button class="reject" onclick="updateComplaint(${c.id}, 'Dismissed')">Dismiss</button>
-      </div>
+      ${complaintActions}
     `;
     card.querySelector(".view-btn").addEventListener("click", () => openComplaintModal(c));
     container.appendChild(card);
